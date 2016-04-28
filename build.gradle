@@ -1,0 +1,64 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+
+    dependencies {
+        classpath group: "de.undercouch", name: "gradle-download-task", version: "2.1.0"
+        classpath group: "me.seeber.gradle", name: "gradle-bintray-config", version: "1.0.0"
+        classpath group: "me.seeber.gradle", name: "gradle-github-config", version: "1.0.0"
+        classpath group: "me.seeber.gradle", name: "gradle-license-config", version: "1.0.0"
+        classpath group: "me.seeber.gradle", name: "gradle-wsimport-plugin", version: "1.0.0"
+    }
+}
+
+version = "1.0.0"
+group = "me.seeber.gradle.wsimport.demo"
+description = "Gradle WSImport Plugin demo project"
+
+apply plugin: "de.undercouch.download"
+apply plugin: "me.seeber.distribution.bintray"
+apply plugin: "me.seeber.distribution.maven"
+apply plugin: "me.seeber.ide.eclipse"
+apply plugin: "me.seeber.project.java"
+apply plugin: "me.seeber.repository.github"
+apply plugin: "me.seeber.setup.license"
+apply plugin: "me.seeber.validation.checkstyle"
+apply plugin: "me.seeber.wsimport"
+
+model {
+    projectConfig {
+        organization.name = "Jochen Seeber"
+        inceptionYear = 2016
+        license {
+            id = "BSD 2-Clause"
+            exclude "*.wsdl"
+        }
+    }
+
+    githubConfig { user = "jochenseeber" }
+}
+
+jar {
+    manifest { attributes "Main-Class": "me.seeber.gradle.wsimport.demo.geoip.Main" }
+}
+
+task downloadWsdl(type: de.undercouch.gradle.tasks.download.Download) {
+    description "Download WSDL"
+    src "http://www.webservicex.net/geoipservice.asmx?WSDL"
+    dest "src/main/wsdl/me/seeber/gradle/wsimport/demo/geoip/client/geoipservice.wsdl"
+}
+
+task run(type: JavaExec) {
+    description "Run the demo"
+    classpath files(jar.archivePath) + sourceSets.main.runtimeClasspath
+    main jar.manifest.attributes["Main-Class"]
+    dependsOn build
+}
+
+tasks.checkstyleMain { exclude "me/seeber/gradle/wsimport/demo/geoip/client/**" }
+
+tasks.javadoc { exclude "me/seeber/gradle/wsimport/demo/geoip/client/**" }
